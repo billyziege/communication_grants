@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<5552ee4ceabb86598d0aecf9228c855b>>
+ * @generated SignedSource<<fe69d41f87af81cc5d2f58105b284014>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -29,7 +29,52 @@ v3 = {
   "kind": "LocalArgument",
   "name": "source"
 },
-v4 = [
+v4 = {
+  "kind": "Variable",
+  "name": "query",
+  "variableName": "query"
+},
+v5 = {
+  "kind": "Variable",
+  "name": "source",
+  "variableName": "source"
+},
+v6 = {
+  "alias": null,
+  "args": [
+    (v4/*: any*/),
+    (v5/*: any*/)
+  ],
+  "concreteType": "SearchFacets",
+  "kind": "LinkedField",
+  "name": "searchFacets",
+  "plural": false,
+  "selections": [
+    {
+      "alias": null,
+      "args": null,
+      "kind": "ScalarField",
+      "name": "sources",
+      "storageKey": null
+    },
+    {
+      "alias": null,
+      "args": null,
+      "kind": "ScalarField",
+      "name": "programmes",
+      "storageKey": null
+    },
+    {
+      "alias": null,
+      "args": null,
+      "kind": "ScalarField",
+      "name": "countries",
+      "storageKey": null
+    }
+  ],
+  "storageKey": null
+},
+v7 = [
   {
     "kind": "Variable",
     "name": "after",
@@ -40,16 +85,8 @@ v4 = [
     "name": "first",
     "variableName": "first"
   },
-  {
-    "kind": "Variable",
-    "name": "query",
-    "variableName": "query"
-  },
-  {
-    "kind": "Variable",
-    "name": "source",
-    "variableName": "source"
-  }
+  (v4/*: any*/),
+  (v5/*: any*/)
 ];
 return {
   "fragment": {
@@ -63,8 +100,9 @@ return {
     "metadata": null,
     "name": "GrantsPageSearchQuery",
     "selections": [
+      (v6/*: any*/),
       {
-        "args": (v4/*: any*/),
+        "args": (v7/*: any*/),
         "kind": "FragmentSpread",
         "name": "GrantList_query"
       }
@@ -83,9 +121,10 @@ return {
     "kind": "Operation",
     "name": "GrantsPageSearchQuery",
     "selections": [
+      (v6/*: any*/),
       {
         "alias": null,
-        "args": (v4/*: any*/),
+        "args": (v7/*: any*/),
         "concreteType": "SearchGrantConnection",
         "kind": "LinkedField",
         "name": "search",
@@ -248,7 +287,7 @@ return {
       },
       {
         "alias": null,
-        "args": (v4/*: any*/),
+        "args": (v7/*: any*/),
         "filters": [
           "query",
           "source"
@@ -261,16 +300,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "8a97a62b3027aa7f4ead3bbd36392b1a",
+    "cacheID": "2b2c7035cd0341b2b1d305aa29674b1e",
     "id": null,
     "metadata": {},
     "name": "GrantsPageSearchQuery",
     "operationKind": "query",
-    "text": "query GrantsPageSearchQuery(\n  $query: String!\n  $source: Source\n  $first: Int\n  $after: String\n) {\n  ...GrantList_query_20xrvv\n}\n\nfragment GrantCard_grant on GrantNode {\n  id\n  title\n  organization\n  country\n  source\n  sourceId\n  sourceProgramme\n  sourceUrl\n  startDate\n  endDate\n  fundingAmount\n  fundingCurrency\n}\n\nfragment GrantList_query_20xrvv on Query {\n  search(query: $query, source: $source, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        startDate\n        country\n        sourceProgramme\n        fundingAmount\n        fundingCurrency\n        ...GrantCard_grant\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
+    "text": "query GrantsPageSearchQuery(\n  $query: String!\n  $source: Source\n  $first: Int\n  $after: String\n) {\n  searchFacets(query: $query, source: $source) {\n    sources\n    programmes\n    countries\n  }\n  ...GrantList_query_20xrvv\n}\n\nfragment GrantCard_grant on GrantNode {\n  id\n  title\n  organization\n  country\n  source\n  sourceId\n  sourceProgramme\n  sourceUrl\n  startDate\n  endDate\n  fundingAmount\n  fundingCurrency\n}\n\nfragment GrantList_query_20xrvv on Query {\n  search(query: $query, source: $source, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        startDate\n        country\n        sourceProgramme\n        fundingAmount\n        fundingCurrency\n        ...GrantCard_grant\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
   }
 };
 })();
 
-node.hash = "7dd8581ae50e049d96cf313e0a6af842";
+node.hash = "9bd6efc8a576c14e256fa551c66120bf";
 
 export default node;

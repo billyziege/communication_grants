@@ -41,7 +41,7 @@ function matchesFacets(g, {
     if (y == null || y > startYearMax) return false;
   }
   if (country && country.trim() !== '') {
-    if (!g.country?.toLowerCase().includes(country.toLowerCase())) return false;
+    if (g.country !== country) return false;
   }
   if (programmes && programmes.size > 0) {
     if (!programmes.has(g.sourceProgramme)) return false;

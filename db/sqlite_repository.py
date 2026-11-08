@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import sqlite3
 
-from db.repository import Grant, GrantPage, GrantRepository, MAX_PAGE_SIZE
+from db.repository import Grant, GrantFacets, GrantPage, GrantRepository, MAX_PAGE_SIZE
 
 
 class SQLiteGrantRepository:
@@ -208,3 +208,41 @@ class SQLiteGrantRepository:
             (source, source_id),
         ).fetchone()
         return self._row_to_grant(row) if row is not None else None
+
+    def get_facets(
+        self,
+        query: str,
+        *,
+        source: str | None = None,
+    ) -> GrantFacets:
+        """Return distinct sources, programmes, and countries for query."""
+        if source not in ("nih", "cordis", None):
+            raise ValueError(
+                f"source must be 'nih', 'cordis', or None; got {source!r}"
+            )
+
+        if source is not None:
+            source_clause = "AND g.source = ?"
+            source_params: list = [source]
+        else:
+            source_clause = ""
+            source_params = []
+
+        def _distinct(col: str, extra: str = "") -> list[str]:
+            sql = f"""
+                SELECT DISTINCT g.{col}
+                FROM   grants_fts
+                JOIN   grants g ON grants_fts.rowid = g.id
+                WHERE  grants_fts MATCH ?
+                       {source_clause}
+                       {extra}
+                ORDER  BY g.{col}
+            """
+            rows = self._conn.execute(sql, [query] + source_params).fetchall()
+            return [r[0] for r in rows if r[0] is not None]
+
+        return GrantFacets(
+            sources=_distinct("source"),
+            programmes=_distinct("source_programme", "AND g.source_programme IS NOT NULL"),
+            countries=_distinct("country", "AND g.country IS NOT NULL"),
+        )

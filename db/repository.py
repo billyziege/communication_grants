@@ -43,6 +43,15 @@ class Grant:
 
 
 @dataclass
+class GrantFacets:
+    """Distinct facet values across all grants matching a search query."""
+
+    sources:    list[str]   # e.g. ['nih', 'cordis']
+    programmes: list[str]   # e.g. ['fp7', 'h2020', 'horizon_europe']
+    countries:  list[str]   # ISO alpha-2 codes, e.g. ['CZ', 'DE', 'US']
+
+
+@dataclass
 class GrantPage:
     """Paginated result envelope.
 
@@ -117,4 +126,17 @@ class GrantRepository(Protocol):
 
     def get_by_source(self, source: str, source_id: str) -> Grant | None:
         """Return the grant matching (source, source_id), or None."""
+        ...
+
+    def get_facets(
+        self,
+        query: str,
+        *,
+        source: str | None = None,
+    ) -> GrantFacets:
+        """Return distinct sources, programmes, and countries matching query.
+
+        Runs three lightweight GROUP BY aggregations via FTS5 MATCH.
+        Same filter semantics as search() — source is optional.
+        """
         ...

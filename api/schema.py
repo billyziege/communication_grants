@@ -12,7 +12,7 @@ import strawberry
 from strawberry import relay
 from strawberry.scalars import JSON
 
-from db.repository import Grant
+from db.repository import Grant, GrantFacets
 
 
 # ---------------------------------------------------------------------------
@@ -35,6 +35,18 @@ class Source(Enum):
 class GrantLookupInput:
     source: Source
     source_id: str
+
+
+# ---------------------------------------------------------------------------
+# SearchFacets
+# ---------------------------------------------------------------------------
+
+
+@strawberry.type
+class SearchFacets:
+    sources:    list[str]
+    programmes: list[str]
+    countries:  list[str]
 
 
 # ---------------------------------------------------------------------------
@@ -280,6 +292,25 @@ class Query:
     ) -> GrantNode | None:
         grant = info.context.repo.get_by_source(source.value, source_id)
         return GrantNode.from_db(grant) if grant else None
+
+    @strawberry.field
+    def search_facets(
+        self,
+        info: strawberry.types.Info,
+        query: str,
+        grant_source: Annotated[
+            Source | None,
+            strawberry.argument(name="source"),
+        ] = None,
+    ) -> SearchFacets:
+        repo = info.context.repo
+        source_str = grant_source.value if grant_source is not None else None
+        result = repo.get_facets(query, source=source_str)
+        return SearchFacets(
+            sources=[s.upper() for s in result.sources],
+            programmes=result.programmes,
+            countries=result.countries,
+        )
 
     @strawberry.field
     def grants_by_source(

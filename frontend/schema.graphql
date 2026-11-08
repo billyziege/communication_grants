@@ -102,7 +102,14 @@ type Query {
     last: Int = null
   ): SearchGrantConnection!
   grantBySource(source: Source!, sourceId: String!): GrantNode
+  searchFacets(query: String!, source: Source = null): SearchFacets!
   grantsBySource(items: [GrantLookupInput!]!): [GrantNode]!
+}
+
+type SearchFacets {
+  sources: [String!]!
+  programmes: [String!]!
+  countries: [String!]!
 }
 
 type SearchGrantConnection {

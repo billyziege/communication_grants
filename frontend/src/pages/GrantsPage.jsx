@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect, useCallback } from 'react';
 import { graphql, useQueryLoader, usePreloadedQuery, fetchQuery } from 'react-relay';
 import FilterPanel from '../components/FilterPanel.jsx';
 import GrantList, { GrantList_query } from '../components/GrantList.jsx';
@@ -25,6 +25,11 @@ export const GrantsPageSearchQuery = graphql`
     $first: Int
     $after: String
   ) {
+    searchFacets(query: $query, source: $source) {
+      sources
+      programmes
+      countries
+    }
     ...GrantList_query @arguments(
       query: $query
       source: $source
@@ -90,8 +95,13 @@ function SearchResultsContainer({
   onSave,
   savedIds,
   activeTab,
+  onFacetsLoaded,
 }) {
   const data = usePreloadedQuery(GrantsPageSearchQuery, queryRef);
+
+  useEffect(() => {
+    if (data.searchFacets) onFacetsLoaded?.(data.searchFacets);
+  }, [data.searchFacets, onFacetsLoaded]);
 
   // Build a Set of IDs that pass client-side facets, if any are active
   const hasActiveFacets =
@@ -131,6 +141,9 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
   const [internalSearchValue, setInternalSearchValue] = useState('');
   const [activeTab, setActiveTab] = useState('search');
   const [activeCollectionName, setActiveCollectionName] = useState(null);
+  const [availableFacets, setAvailableFacets] = useState({ sources: [], programmes: [], countries: [] });
+
+  const handleFacetsLoaded = useCallback(f => setAvailableFacets(f), []);
   const [collections, setCollections] = useState(() => loadCollections());
   const [importError, setImportError] = useState('');
 
@@ -147,6 +160,7 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
   }
 
   function runSearch(query) {
+    setAvailableFacets({ sources: [], programmes: [], countries: [] });
     loadQuery(
       { query: query || ' ', source: source || undefined, first: 100 },
       { fetchPolicy: 'network-only' }
@@ -281,6 +295,9 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
           onSourceChange={setSource}
           onFacetsChange={setFacets}
           onSearch={() => handleSearch(externalSearchValue ?? internalSearchValue)}
+          availableSources={availableFacets.sources}
+          availableProgrammes={availableFacets.programmes}
+          availableCountries={availableFacets.countries}
         />
       </div>
 
@@ -306,7 +323,7 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
             queryRef == null ? (
               <div className="flex items-center justify-center h-full min-h-48">
                 <p className="text-gray-400 italic text-sm" data-testid="empty-search-state">
-                  Enter keywords in the search bar and click Search to find grants.
+                  Enter keywords in the search bar and click Search abstracts to find grants.
                 </p>
               </div>
             ) : (
@@ -328,6 +345,7 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
                     onSave={handleSave}
                     savedIds={new Set()}
                     activeTab={activeTab}
+                    onFacetsLoaded={handleFacetsLoaded}
                   />
                 </Suspense>
               </ErrorBoundary>
