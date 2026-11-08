@@ -124,12 +124,13 @@ function SearchResultsContainer({
 
 export default function GrantsPage({ pendingSearch, searchValue: externalSearchValue }) {
   const [queryRef, loadQuery] = useQueryLoader(GrantsPageSearchQuery);
-  const [detailQueryRef, loadDetailQuery] = useQueryLoader(GrantDetailPanelQuery);
+  const [detailQueryRef, loadDetailQuery, disposeDetailQuery] = useQueryLoader(GrantDetailPanelQuery);
 
   const [source, setSource] = useState(null);
   const [facets, setFacets] = useState(emptyFacets());
   const [internalSearchValue, setInternalSearchValue] = useState('');
   const [activeTab, setActiveTab] = useState('search');
+  const [activeCollectionName, setActiveCollectionName] = useState(null);
   const [collections, setCollections] = useState(() => loadCollections());
   const [importError, setImportError] = useState('');
 
@@ -162,7 +163,7 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
   }
 
   function handleSave(grant) {
-    if (activeTab === 'search') return;
+    if (!activeCollectionName) return;
     const snapshot = {
       source: grant.source,
       sourceId: grant.sourceId,
@@ -177,23 +178,30 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
       sourceUrl: grant.sourceUrl ?? '',
     };
     try {
-      const next = addItemToCollection(collections, activeTab, snapshot);
+      const next = addItemToCollection(collections, activeCollectionName, snapshot);
       persistCollections(next);
     } catch {
       // duplicate — silently ignore
     }
   }
 
+  function handleTabChange(name) {
+    setActiveTab(name);
+    if (name !== 'search') setActiveCollectionName(name);
+  }
+
   function handleCreateCollection(name) {
     const next = createCollection(collections, name);
     persistCollections(next);
     setActiveTab(name);
+    setActiveCollectionName(name);
   }
 
   function handleDeleteCollection(name) {
     const next = deleteCollection(collections, name);
     persistCollections(next);
     if (activeTab === name) setActiveTab('search');
+    if (activeCollectionName === name) setActiveCollectionName(null);
   }
 
   async function handleImportCollection(file) {
@@ -259,6 +267,7 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
 
     persistCollections(cols);
     setActiveTab(collectionName);
+    setActiveCollectionName(collectionName);
   }
 
   const activeCollection = collections.find(c => c.name === activeTab);
@@ -281,7 +290,8 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
         <CollectionsPanel
           collections={collections}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          activeCollectionName={activeCollectionName}
+          onTabChange={handleTabChange}
           onCreateCollection={handleCreateCollection}
           onDeleteCollection={handleDeleteCollection}
           onImportCollection={handleImportCollection}
@@ -357,9 +367,10 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
       <Suspense fallback={null}>
         <GrantDetailPanel
           queryRef={detailQueryRef}
-          onClose={() => loadDetailQuery(null)}
+          onClose={disposeDetailQuery}
           onSave={handleSave}
-          saveDisabled={activeTab === 'search'}
+          saveDisabled={activeCollectionName === null}
+          activeCollectionName={activeCollectionName}
         />
       </Suspense>
     </div>

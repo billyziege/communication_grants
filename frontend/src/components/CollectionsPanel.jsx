@@ -3,7 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { parseImportFile } from '../lib/export.js';
 import { createCollection } from '../lib/collections.js';
 
-function TabButton({ label, active, onClose, onClick }) {
+function TabButton({ label, active, isActiveSaveTarget, onClose, onClick }) {
   return (
     <div
       role="tab"
@@ -15,6 +15,9 @@ function TabButton({ label, active, onClose, onClick }) {
       }`}
       onClick={onClick}
     >
+      {isActiveSaveTarget && (
+        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" title="Active collection — saves go here" />
+      )}
       <span>{label}</span>
       {onClose && (
         <button
@@ -36,6 +39,7 @@ function TabButton({ label, active, onClose, onClick }) {
 export default function CollectionsPanel({
   collections,
   activeTab,
+  activeCollectionName,
   onTabChange,
   onCreateCollection,
   onDeleteCollection,
@@ -82,6 +86,7 @@ export default function CollectionsPanel({
             key={col.name}
             label={col.name}
             active={activeTab === col.name}
+            isActiveSaveTarget={activeCollectionName === col.name}
             onClick={() => onTabChange(col.name)}
             onClose={() => onDeleteCollection(col.name)}
           />

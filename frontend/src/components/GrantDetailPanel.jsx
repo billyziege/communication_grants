@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePreloadedQuery, graphql } from 'react-relay';
+import { usePreloadedQuery, useFragment, graphql } from 'react-relay';
 import { formatFunding, snakeToTitle } from '../lib/utils.js';
 
 export const GrantDetailPanelQuery = graphql`
@@ -41,7 +41,7 @@ function DetailRow({ label, value }) {
   );
 }
 
-function GrantDetailContent({ grant, onClose, onSave, isSaved, saveDisabled }) {
+function GrantDetailContent({ grant, onClose, onSave, isSaved, saveDisabled, activeCollectionName }) {
   if (!grant) return null;
 
   const sourceIsNih = grant.source === 'NIH' || grant.source === 'nih';
@@ -146,6 +146,7 @@ function GrantDetailContent({ grant, onClose, onSave, isSaved, saveDisabled }) {
           type="button"
           disabled={saveDisabled}
           onClick={() => !saveDisabled && onSave && onSave(grant)}
+          title={saveDisabled ? 'Create a collection tab first (+ button above)' : undefined}
           className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
             saveDisabled
               ? 'opacity-40 cursor-not-allowed border border-gray-200 text-gray-400'
@@ -154,16 +155,20 @@ function GrantDetailContent({ grant, onClose, onSave, isSaved, saveDisabled }) {
               : 'bg-blue-600 text-white hover:bg-blue-700'
           }`}
         >
-          {isSaved ? '✓ Saved' : '+ Save to collection'}
+          {saveDisabled
+            ? 'No active collection'
+            : isSaved
+            ? `✓ Saved to ${activeCollectionName}`
+            : `+ Save to ${activeCollectionName}`}
         </button>
       </div>
     </div>
   );
 }
 
-function GrantDetailLoader({ queryRef, onClose, onSave, isSaved, saveDisabled }) {
+function GrantDetailLoader({ queryRef, onClose, onSave, isSaved, saveDisabled, activeCollectionName }) {
   const data = usePreloadedQuery(GrantDetailPanelQuery, queryRef);
-  const grant = data.node;
+  const grant = useFragment(GrantDetailPanel_grant, data.node);
   return (
     <GrantDetailContent
       grant={grant}
@@ -171,6 +176,7 @@ function GrantDetailLoader({ queryRef, onClose, onSave, isSaved, saveDisabled })
       onSave={onSave}
       isSaved={isSaved}
       saveDisabled={saveDisabled}
+      activeCollectionName={activeCollectionName}
     />
   );
 }
@@ -181,6 +187,7 @@ export default function GrantDetailPanel({
   onSave,
   isSaved,
   saveDisabled,
+  activeCollectionName,
 }) {
   if (!queryRef) return null;
   return (
@@ -190,6 +197,7 @@ export default function GrantDetailPanel({
       onSave={onSave}
       isSaved={isSaved}
       saveDisabled={saveDisabled}
+      activeCollectionName={activeCollectionName}
     />
   );
 }
