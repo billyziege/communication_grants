@@ -31,7 +31,7 @@ uv sync
 
 ```bash
 mkdir -p data
-uv run python3 db/build_db.py \
+uv run python3 -m db.build_db \
     --start-year 2015 \
     --data-dir ./data \
     --db-path ./data/grants.db
@@ -60,7 +60,7 @@ To refresh the data (e.g. after a new CORDIS release):
 
 ```bash
 # Re-run the build pipeline on the host
-uv run python3 db/build_db.py --start-year 2015 --data-dir ./data --db-path ./data/grants.db
+uv run python3 -m db.build_db --start-year 2015 --data-dir ./data --db-path ./data/grants.db
 
 # Reload the Docker volume
 docker compose --profile build run db-builder
