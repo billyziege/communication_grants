@@ -45,8 +45,6 @@ Note: This step downloads several hundred MB of data from NIH and CORDIS. It tak
 # Copy .env.example to .env (defaults are fine for most setups)
 cp .env.example .env
 
-# Load the named volume and start services
-docker compose --profile build run db-builder   # copies grants.db into the Docker volume
 docker compose up --build
 ```
 
@@ -59,11 +57,7 @@ The app is available at **http://localhost:3000**. GraphiQL (the interactive API
 To refresh the data (e.g. after a new CORDIS release):
 
 ```bash
-# Re-run the build pipeline on the host
 uv run python3 -m db.build_db --start-year 2015 --data-dir ./data --db-path ./data/grants.db
-
-# Reload the Docker volume
-docker compose --profile build run db-builder
 docker compose restart api
 ```
 

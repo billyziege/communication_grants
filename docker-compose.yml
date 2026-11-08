@@ -7,11 +7,10 @@ services:
     environment:
       GRANTS_DB_PATH: /data/grants.db
     volumes:
-      - grants_data:/data:ro
+      - ${DATA_DIR:-./data}:/data:ro   # bind-mount the host data directory read-only
     ports:
       - "8000:8000"   # exposes GraphiQL at http://localhost:8000/graphql
     restart: unless-stopped
-    depends_on: []    # db-builder is a one-shot; api starts independently
 
   frontend:
     build:
@@ -22,24 +21,3 @@ services:
     depends_on:
       - api
     restart: unless-stopped
-
-  db-builder:
-    build:
-      context: .
-      dockerfile: Dockerfile.api   # reuses the same image
-    profiles:
-      - build
-    environment:
-      GRANTS_DB_PATH: /data/grants.db
-    volumes:
-      - grants_data:/data
-      - ${DATA_DIR:-./data}:/raw   # downloaded ZIPs and manifest land here on the host
-    command: >
-      python3 db/build_db.py
-        --start-year ${START_YEAR:-2015}
-        --data-dir /raw
-        --db-path /data/grants.db
-
-volumes:
-  grants_data:
-    driver: local
