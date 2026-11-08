@@ -13,7 +13,9 @@ for sharing with collaborators.
 ## Prerequisites
 
 - Docker and Docker Compose (v2)
-- Python 3.11+ (for the database build step, run outside Docker)
+- Python 3.11+ with [uv](https://docs.astral.sh/uv/) (for the database build step, run outside Docker)
+
+Install uv if you don't have it: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 ---
 
@@ -22,14 +24,14 @@ for sharing with collaborators.
 **Step 1 — Install Python dependencies (for the build pipeline):**
 
 ```bash
-python3 -m pip install -e .
+uv sync
 ```
 
 **Step 2 — Build the database:**
 
 ```bash
 mkdir -p data
-python3 db/build_db.py \
+uv run python3 db/build_db.py \
     --start-year 2015 \
     --data-dir ./data \
     --db-path ./data/grants.db
@@ -58,7 +60,7 @@ To refresh the data (e.g. after a new CORDIS release):
 
 ```bash
 # Re-run the build pipeline on the host
-python3 db/build_db.py --start-year 2015 --data-dir ./data --db-path ./data/grants.db
+uv run python3 db/build_db.py --start-year 2015 --data-dir ./data --db-path ./data/grants.db
 
 # Reload the Docker volume
 docker compose --profile build run db-builder
@@ -78,14 +80,17 @@ The search interface allows saving grants into named collections. Each collectio
 ## Development
 
 ```bash
+# Install dependencies
+uv sync
+
 # Run backend tests
-python3 -m pytest
+uv run pytest
 
 # Run frontend tests
 cd frontend && npm test
 
 # Run the backend locally (without Docker)
-GRANTS_DB_PATH=./data/grants.db python3 -m uvicorn api.app:app --reload
+GRANTS_DB_PATH=./data/grants.db uv run uvicorn api.app:app --reload
 
 # Run the frontend dev server (proxies /graphql to localhost:8000)
 cd frontend && npm run dev
