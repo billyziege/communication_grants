@@ -267,6 +267,7 @@ NIH_COUNTRY_LOOKUP: dict[str, str] = {
     "ETHIOPIA": "ET",
     "GHANA": "GH",
     "TANZANIA": "TZ",
+    "TANZANIA U REP": "TZ",       # NIH abbreviation for United Republic of Tanzania
     "UGANDA": "UG",
     "ZIMBABWE": "ZW",
     "ZAMBIA": "ZM",
@@ -276,6 +277,22 @@ NIH_COUNTRY_LOOKUP: dict[str, str] = {
     "RWANDA": "RW",
     "MALAWI": "MW",
     "BOTSWANA": "BW",
+    "MALI": "ML",
+    "CONGO": "CG",
+    "CONGO DEM REP": "CD",
+    "COTE D'IVOIRE": "CI",
+    "NAMIBIA": "NA",
+    "BENIN": "BJ",
+    "MADAGASCAR": "MG",
+    "TOGO": "TG",
+    "GUINEA": "GN",
+    "GUINEA-BISSAU": "GW",
+    "GAMBIA": "GM",
+    "LIBERIA": "LR",
+    "LESOTHO": "LS",
+    "ESWATINI": "SZ",
+    "MOROCCO": "MA",
+    "TUNISIA": "TN",
     # Latin America / Caribbean
     "BRAZIL": "BR",
     "ARGENTINA": "AR",
@@ -296,6 +313,32 @@ NIH_COUNTRY_LOOKUP: dict[str, str] = {
     "PARAGUAY": "PY",
     "URUGUAY": "UY",
     "TRINIDAD AND TOBAGO": "TT",
+    "TRINIDAD/TOBA": "TT",        # NIH abbreviation for Trinidad and Tobago
+    "NICARAGUA": "NI",
+    "DOMINICAN REP": "DO",
+    "GUYANA": "GY",
+    "SURINAME": "SR",
+    "BARBADOS": "BB",
+    "BAHAMAS": "BS",
+    "ST KITTS/NEVIS": "KN",
+    # Central Asia
+    "KAZAKHSTAN": "KZ",
+    "UZBEKISTAN": "UZ",
+    "TAJIKISTAN": "TJ",
+    "KYRGYZSTAN": "KG",
+    "MONGOLIA": "MN",
+    # Eastern Europe / Caucasus
+    "ALBANIA": "AL",
+    "ARMENIA": "AM",
+    "GEORGIA": "GE",
+    "MOLDOVA": "MD",
+    # South/Southeast Asia
+    "CAMBODIA": "KH",
+    "BHUTAN": "BT",
+    "MALDIVES": "MV",
+    # Pacific
+    "FED MICRONESIA": "FM",
+    "NEW CALEDONIA": "NC",
     # Other
     "PUERTO RICO": "PR",
 }

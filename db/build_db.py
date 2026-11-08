@@ -264,7 +264,7 @@ def _load_abstract_dict(abs_zip_path: Path) -> dict[str, str]:
         if not csv_names:
             return result
         with zf.open(csv_names[0]) as f:
-            reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig"))
+            reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig", errors="replace"))
             for row in reader:
                 app_id = (row.get("APPLICATION_ID") or "").strip()
                 abstract = (row.get("ABSTRACT_TEXT") or "").strip()
