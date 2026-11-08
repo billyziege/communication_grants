@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as ToggleGroup from '@radix-ui/react-toggle-group';
-import { emptyFacets } from '../lib/facets.js';
+import { emptyFilters } from '../lib/facets.js';
 
 const PROGRAMME_LABELS = {
   fp7: 'FP7',
@@ -21,7 +21,7 @@ function FilterSection({ label, children }) {
   );
 }
 
-function NumberInput({ value, onChange, placeholder }) {
+function IntInput({ value, onChange, placeholder }) {
   return (
     <input
       type="number"
@@ -36,68 +36,59 @@ function NumberInput({ value, onChange, placeholder }) {
   );
 }
 
+function FloatInput({ value, onChange, placeholder }) {
+  return (
+    <input
+      type="number"
+      value={value === null ? '' : value}
+      onChange={e => {
+        const v = e.target.value;
+        onChange(v === '' ? null : parseFloat(v));
+      }}
+      placeholder={placeholder}
+      className="w-full text-sm border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 placeholder:text-gray-300"
+    />
+  );
+}
+
 export default function FilterPanel({
-  source,
-  onSourceChange,
-  onFacetsChange,
-  onSearch,
+  filters,
   availableSources = [],
   availableProgrammes = [],
   availableCountries = [],
+  onApply,
+  onReset,
 }) {
-  const [facets, setFacets] = useState(emptyFacets());
+  const [local, setLocal] = useState(() => ({
+    ...filters,
+    programmes: new Set(filters.programmes),
+  }));
 
-  function updateFacet(key, value) {
-    const next = { ...facets, [key]: value };
-    setFacets(next);
-    onFacetsChange(next);
+  // Sync when parent resets filters from outside
+  useEffect(() => {
+    setLocal({ ...filters, programmes: new Set(filters.programmes) });
+  }, [filters]);
+
+  function update(key, value) {
+    setLocal(prev => ({ ...prev, [key]: value }));
   }
 
   function handleProgrammeChange(vals) {
-    const next = { ...facets, programmes: new Set(vals) };
-    setFacets(next);
-    onFacetsChange(next);
+    setLocal(prev => ({ ...prev, programmes: new Set(vals) }));
   }
-
-  function handleReset() {
-    const reset = emptyFacets();
-    setFacets(reset);
-    onFacetsChange(reset);
-    onSourceChange(null);
-  }
-
-  const hasResults = availableSources.length > 0;
 
   return (
-    <div>
-      {/* Sticky top bar */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-3 flex gap-2">
-        <button
-          type="button"
-          onClick={onSearch}
-          className="flex-1 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-        >
-          Search abstracts
-        </button>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
-        >
-          Reset
-        </button>
-      </div>
-
+    <div className="flex flex-col h-full">
       {/* Scrollable filter body */}
-      <div className="p-3 space-y-5">
+      <div className="flex-1 overflow-y-auto p-3 space-y-5">
 
-        {/* Source — data-driven, server-side filter */}
+        {/* Source — data-driven, appears after search */}
         {availableSources.length > 0 && (
           <FilterSection label="Source">
             <ToggleGroup.Root
               type="single"
-              value={source ?? ''}
-              onValueChange={val => onSourceChange(val || null)}
+              value={local.source ?? ''}
+              onValueChange={val => update('source', val || null)}
               className="flex gap-1"
               aria-label="Source filter"
             >
@@ -123,29 +114,29 @@ export default function FilterPanel({
           <div className="flex gap-2">
             <div className="flex-1">
               <div className="text-[10px] text-gray-400 mb-0.5">From</div>
-              <NumberInput
-                value={facets.startYearMin}
-                onChange={v => updateFacet('startYearMin', v)}
+              <IntInput
+                value={local.yearMin}
+                onChange={v => update('yearMin', v)}
                 placeholder="2007"
               />
             </div>
             <div className="flex-1">
               <div className="text-[10px] text-gray-400 mb-0.5">To</div>
-              <NumberInput
-                value={facets.startYearMax}
-                onChange={v => updateFacet('startYearMax', v)}
+              <IntInput
+                value={local.yearMax}
+                onChange={v => update('yearMax', v)}
                 placeholder="2026"
               />
             </div>
           </div>
         </FilterSection>
 
-        {/* Country — data-driven dropdown */}
+        {/* Country — data-driven dropdown, appears after search */}
         {availableCountries.length > 0 && (
           <FilterSection label="Country">
             <select
-              value={facets.country}
-              onChange={e => updateFacet('country', e.target.value)}
+              value={local.country}
+              onChange={e => update('country', e.target.value)}
               className="w-full text-sm border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
               aria-label="Country filter"
             >
@@ -157,12 +148,12 @@ export default function FilterPanel({
           </FilterSection>
         )}
 
-        {/* Programme — data-driven */}
+        {/* Programme — data-driven, appears after search */}
         {availableProgrammes.length > 0 && (
           <FilterSection label="Programme">
             <ToggleGroup.Root
               type="multiple"
-              value={[...facets.programmes]}
+              value={[...local.programmes]}
               onValueChange={handleProgrammeChange}
               className="flex flex-wrap gap-1"
               aria-label="Programme filter"
@@ -189,30 +180,48 @@ export default function FilterPanel({
           <div className="flex gap-2">
             <div className="flex-1">
               <div className="text-[10px] text-gray-400 mb-0.5">Min</div>
-              <NumberInput
-                value={facets.fundingMin}
-                onChange={v => updateFacet('fundingMin', v)}
+              <FloatInput
+                value={local.fundingMin}
+                onChange={v => update('fundingMin', v)}
                 placeholder="0"
               />
             </div>
             <div className="flex-1">
               <div className="text-[10px] text-gray-400 mb-0.5">Max</div>
-              <NumberInput
-                value={facets.fundingMax}
-                onChange={v => updateFacet('fundingMax', v)}
+              <FloatInput
+                value={local.fundingMax}
+                onChange={v => update('fundingMax', v)}
                 placeholder="—"
               />
             </div>
           </div>
         </FilterSection>
 
-        {/* Placeholder before first search */}
-        {!hasResults && (
+        {/* Hint before first search */}
+        {availableSources.length === 0 && availableCountries.length === 0 && (
           <p className="text-xs text-gray-400 italic pt-1">
             Source, country, and programme filters appear after a search.
           </p>
         )}
 
+      </div>
+
+      {/* Sticky bottom bar: Apply + Reset */}
+      <div className="flex-shrink-0 border-t border-gray-200 bg-white p-3 flex gap-2">
+        <button
+          type="button"
+          onClick={() => onApply(local)}
+          className="flex-1 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+        >
+          Apply
+        </button>
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
+        >
+          Reset
+        </button>
       </div>
     </div>
   );

@@ -89,29 +89,52 @@ class SQLiteGrantRepository:
         query: str,
         *,
         source: str | None = None,
+        year_min: int | None = None,
+        year_max: int | None = None,
+        country: str | None = None,
+        programmes: list[str] | None = None,
+        funding_min: float | None = None,
+        funding_max: float | None = None,
         limit: int = 20,
         offset: int = 0,
     ) -> GrantPage:
-        """Full-text search over title and abstract via FTS5 MATCH.
+        """Full-text search via FTS5 MATCH with optional server-side filters.
 
-        Results are ordered by BM25 relevance, best match first.
-        SQLite FTS5 bm25() returns negative values; more negative means more
-        relevant.  ORDER BY bm25(grants_fts) ascending therefore returns the
-        best matches first — do not negate or reverse the sign.
+        Results ordered by BM25 relevance (ascending — more negative = more
+        relevant). Filter parameters map directly to SQL WHERE clauses so the
+        full database is searched, not just the loaded page.
 
-        sqlite3.OperationalError from malformed MATCH expressions propagates
-        to the caller (Contract 05 handles user-facing presentation).
+        sqlite3.OperationalError from malformed MATCH expressions propagates.
         """
         clamped_limit = self._validate(source, limit, offset)
 
-        # Build the source filter clause dynamically to avoid passing the
-        # parameter twice with OR IS NULL (§6.1 of contract).
+        clauses: list[str] = []
+        extra: list = []
+
         if source is not None:
-            source_clause = "AND g.source = ?"
-            source_params: list = [source]
-        else:
-            source_clause = ""
-            source_params = []
+            clauses.append("AND g.source = ?")
+            extra.append(source)
+        if year_min is not None:
+            clauses.append("AND CAST(substr(g.start_date, 1, 4) AS INT) >= ?")
+            extra.append(year_min)
+        if year_max is not None:
+            clauses.append("AND CAST(substr(g.start_date, 1, 4) AS INT) <= ?")
+            extra.append(year_max)
+        if country:
+            clauses.append("AND g.country = ?")
+            extra.append(country)
+        if programmes:
+            placeholders = ",".join(["?"] * len(programmes))
+            clauses.append(f"AND g.source_programme IN ({placeholders})")
+            extra.extend(programmes)
+        if funding_min is not None:
+            clauses.append("AND g.funding_amount >= ?")
+            extra.append(funding_min)
+        if funding_max is not None:
+            clauses.append("AND g.funding_amount <= ?")
+            extra.append(funding_max)
+
+        filter_sql = " ".join(clauses)
 
         results_sql = f"""
             SELECT g.*,
@@ -119,13 +142,13 @@ class SQLiteGrantRepository:
             FROM   grants_fts
             JOIN   grants g ON grants_fts.rowid = g.id
             WHERE  grants_fts MATCH ?
-                   {source_clause}
+                   {filter_sql}
             ORDER  BY bm25(grants_fts)
             LIMIT  ? OFFSET ?
         """
         rows = self._conn.execute(
             results_sql,
-            [query] + source_params + [clamped_limit, offset],
+            [query] + extra + [clamped_limit, offset],
         ).fetchall()
 
         count_sql = f"""
@@ -133,11 +156,11 @@ class SQLiteGrantRepository:
             FROM   grants_fts
             JOIN   grants g ON grants_fts.rowid = g.id
             WHERE  grants_fts MATCH ?
-                   {source_clause}
+                   {filter_sql}
         """
         total: int = self._conn.execute(
             count_sql,
-            [query] + source_params,
+            [query] + extra,
         ).fetchone()[0]
 
         return GrantPage(

@@ -113,10 +113,8 @@ describe('GrantsPage', () => {
     const env = createEnv();
     renderWithRelay(<GrantsPage />, env);
 
-    // Trigger an import by calling handleImportCollection indirectly
-    // We simulate by finding the import input
-    const importLabel = screen.getByText('Import');
-    const fileInput = importLabel.closest('label').querySelector('input[type="file"]');
+    // Trigger an import by dispatching a change event on the hidden file input
+    const fileInput = screen.getByTestId('import-file-input');
 
     const file = new File(['{}'], 'Existing Collection.json', { type: 'application/json' });
     Object.defineProperty(fileInput, 'files', {

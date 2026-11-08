@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<fe69d41f87af81cc5d2f58105b284014>>
+ * @generated SignedSource<<834863023560dde193b485ca90aa9d45>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -17,33 +17,57 @@ var v0 = {
 v1 = {
   "defaultValue": null,
   "kind": "LocalArgument",
-  "name": "first"
+  "name": "country"
 },
 v2 = {
   "defaultValue": null,
   "kind": "LocalArgument",
-  "name": "query"
+  "name": "first"
 },
 v3 = {
   "defaultValue": null,
   "kind": "LocalArgument",
-  "name": "source"
+  "name": "fundingMax"
 },
 v4 = {
+  "defaultValue": null,
+  "kind": "LocalArgument",
+  "name": "fundingMin"
+},
+v5 = {
+  "defaultValue": null,
+  "kind": "LocalArgument",
+  "name": "programmes"
+},
+v6 = {
+  "defaultValue": null,
+  "kind": "LocalArgument",
+  "name": "query"
+},
+v7 = {
+  "defaultValue": null,
+  "kind": "LocalArgument",
+  "name": "source"
+},
+v8 = {
+  "defaultValue": null,
+  "kind": "LocalArgument",
+  "name": "yearMax"
+},
+v9 = {
+  "defaultValue": null,
+  "kind": "LocalArgument",
+  "name": "yearMin"
+},
+v10 = {
   "kind": "Variable",
   "name": "query",
   "variableName": "query"
 },
-v5 = {
-  "kind": "Variable",
-  "name": "source",
-  "variableName": "source"
-},
-v6 = {
+v11 = {
   "alias": null,
   "args": [
-    (v4/*: any*/),
-    (v5/*: any*/)
+    (v10/*: any*/)
   ],
   "concreteType": "SearchFacets",
   "kind": "LinkedField",
@@ -74,7 +98,7 @@ v6 = {
   ],
   "storageKey": null
 },
-v7 = [
+v12 = [
   {
     "kind": "Variable",
     "name": "after",
@@ -82,11 +106,45 @@ v7 = [
   },
   {
     "kind": "Variable",
+    "name": "country",
+    "variableName": "country"
+  },
+  {
+    "kind": "Variable",
     "name": "first",
     "variableName": "first"
   },
-  (v4/*: any*/),
-  (v5/*: any*/)
+  {
+    "kind": "Variable",
+    "name": "fundingMax",
+    "variableName": "fundingMax"
+  },
+  {
+    "kind": "Variable",
+    "name": "fundingMin",
+    "variableName": "fundingMin"
+  },
+  {
+    "kind": "Variable",
+    "name": "programmes",
+    "variableName": "programmes"
+  },
+  (v10/*: any*/),
+  {
+    "kind": "Variable",
+    "name": "source",
+    "variableName": "source"
+  },
+  {
+    "kind": "Variable",
+    "name": "yearMax",
+    "variableName": "yearMax"
+  },
+  {
+    "kind": "Variable",
+    "name": "yearMin",
+    "variableName": "yearMin"
+  }
 ];
 return {
   "fragment": {
@@ -94,15 +152,21 @@ return {
       (v0/*: any*/),
       (v1/*: any*/),
       (v2/*: any*/),
-      (v3/*: any*/)
+      (v3/*: any*/),
+      (v4/*: any*/),
+      (v5/*: any*/),
+      (v6/*: any*/),
+      (v7/*: any*/),
+      (v8/*: any*/),
+      (v9/*: any*/)
     ],
     "kind": "Fragment",
     "metadata": null,
     "name": "GrantsPageSearchQuery",
     "selections": [
-      (v6/*: any*/),
+      (v11/*: any*/),
       {
-        "args": (v7/*: any*/),
+        "args": (v12/*: any*/),
         "kind": "FragmentSpread",
         "name": "GrantList_query"
       }
@@ -113,18 +177,24 @@ return {
   "kind": "Request",
   "operation": {
     "argumentDefinitions": [
-      (v2/*: any*/),
-      (v3/*: any*/),
+      (v6/*: any*/),
+      (v7/*: any*/),
+      (v9/*: any*/),
+      (v8/*: any*/),
       (v1/*: any*/),
+      (v5/*: any*/),
+      (v4/*: any*/),
+      (v3/*: any*/),
+      (v2/*: any*/),
       (v0/*: any*/)
     ],
     "kind": "Operation",
     "name": "GrantsPageSearchQuery",
     "selections": [
-      (v6/*: any*/),
+      (v11/*: any*/),
       {
         "alias": null,
-        "args": (v7/*: any*/),
+        "args": (v12/*: any*/),
         "concreteType": "SearchGrantConnection",
         "kind": "LinkedField",
         "name": "search",
@@ -164,41 +234,6 @@ return {
                     "alias": null,
                     "args": null,
                     "kind": "ScalarField",
-                    "name": "startDate",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
-                    "name": "country",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
-                    "name": "sourceProgramme",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
-                    "name": "fundingAmount",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
-                    "name": "fundingCurrency",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
                     "name": "title",
                     "storageKey": null
                   },
@@ -207,6 +242,13 @@ return {
                     "args": null,
                     "kind": "ScalarField",
                     "name": "organization",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "country",
                     "storageKey": null
                   },
                   {
@@ -227,6 +269,13 @@ return {
                     "alias": null,
                     "args": null,
                     "kind": "ScalarField",
+                    "name": "sourceProgramme",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
                     "name": "sourceUrl",
                     "storageKey": null
                   },
@@ -234,7 +283,28 @@ return {
                     "alias": null,
                     "args": null,
                     "kind": "ScalarField",
+                    "name": "startDate",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
                     "name": "endDate",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "fundingAmount",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "fundingCurrency",
                     "storageKey": null
                   },
                   {
@@ -287,10 +357,16 @@ return {
       },
       {
         "alias": null,
-        "args": (v7/*: any*/),
+        "args": (v12/*: any*/),
         "filters": [
           "query",
-          "source"
+          "source",
+          "yearMin",
+          "yearMax",
+          "country",
+          "programmes",
+          "fundingMin",
+          "fundingMax"
         ],
         "handle": "connection",
         "key": "GrantList_search",
@@ -300,16 +376,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "2b2c7035cd0341b2b1d305aa29674b1e",
+    "cacheID": "14621bc2bbe02e8868fa061b5e6dbfa6",
     "id": null,
     "metadata": {},
     "name": "GrantsPageSearchQuery",
     "operationKind": "query",
-    "text": "query GrantsPageSearchQuery(\n  $query: String!\n  $source: Source\n  $first: Int\n  $after: String\n) {\n  searchFacets(query: $query, source: $source) {\n    sources\n    programmes\n    countries\n  }\n  ...GrantList_query_20xrvv\n}\n\nfragment GrantCard_grant on GrantNode {\n  id\n  title\n  organization\n  country\n  source\n  sourceId\n  sourceProgramme\n  sourceUrl\n  startDate\n  endDate\n  fundingAmount\n  fundingCurrency\n}\n\nfragment GrantList_query_20xrvv on Query {\n  search(query: $query, source: $source, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        startDate\n        country\n        sourceProgramme\n        fundingAmount\n        fundingCurrency\n        ...GrantCard_grant\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
+    "text": "query GrantsPageSearchQuery(\n  $query: String!\n  $source: Source\n  $yearMin: Int\n  $yearMax: Int\n  $country: String\n  $programmes: [String!]\n  $fundingMin: Float\n  $fundingMax: Float\n  $first: Int\n  $after: String\n) {\n  searchFacets(query: $query) {\n    sources\n    programmes\n    countries\n  }\n  ...GrantList_query_VqWS4\n}\n\nfragment GrantCard_grant on GrantNode {\n  id\n  title\n  organization\n  country\n  source\n  sourceId\n  sourceProgramme\n  sourceUrl\n  startDate\n  endDate\n  fundingAmount\n  fundingCurrency\n}\n\nfragment GrantList_query_VqWS4 on Query {\n  search(query: $query, source: $source, yearMin: $yearMin, yearMax: $yearMax, country: $country, programmes: $programmes, fundingMin: $fundingMin, fundingMax: $fundingMax, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        ...GrantCard_grant\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
   }
 };
 })();
 
-node.hash = "9bd6efc8a576c14e256fa551c66120bf";
+node.hash = "a8684963e444c036daefc4459598e0d4";
 
 export default node;

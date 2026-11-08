@@ -126,6 +126,7 @@ export default function CollectionsPanel({
         type="file"
         accept=".json"
         className="hidden"
+        data-testid="import-file-input"
         onChange={handleImportFile}
       />
 

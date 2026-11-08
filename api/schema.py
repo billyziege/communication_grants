@@ -128,6 +128,12 @@ class ListParams:
 class SearchParams:
     query: str
     source_filter: str | None
+    year_min: int | None = None
+    year_max: int | None = None
+    country: str | None = None
+    programmes: list[str] | None = None
+    funding_min: float | None = None
+    funding_max: float | None = None
 
     def __iter__(self):
         return iter([])
@@ -225,6 +231,12 @@ class SearchGrantConnection(relay.Connection[GrantNode]):
         page = repo.search(
             nodes.query,
             source=nodes.source_filter,
+            year_min=nodes.year_min,
+            year_max=nodes.year_max,
+            country=nodes.country,
+            programmes=nodes.programmes,
+            funding_min=nodes.funding_min,
+            funding_max=nodes.funding_max,
             limit=limit,
             offset=offset,
         )
@@ -277,10 +289,22 @@ class Query:
             Source | None,
             strawberry.argument(name="source"),
         ] = None,
+        year_min: int | None = None,
+        year_max: int | None = None,
+        country: str | None = None,
+        programmes: list[str] | None = None,
+        funding_min: float | None = None,
+        funding_max: float | None = None,
     ) -> Iterable[GrantNode]:
         return SearchParams(
             query=query,
             source_filter=grant_source.value if grant_source else None,
+            year_min=year_min,
+            year_max=year_max,
+            country=country,
+            programmes=programmes,
+            funding_min=funding_min,
+            funding_max=funding_max,
         )
 
     @strawberry.field

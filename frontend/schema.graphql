@@ -88,6 +88,12 @@ type Query {
   search(
     query: String!
     source: Source = null
+    yearMin: Int = null
+    yearMax: Int = null
+    country: String = null
+    programmes: [String!] = null
+    fundingMin: Float = null
+    fundingMax: Float = null
 
     """Returns the items in the list that come before the specified cursor."""
     before: String = null

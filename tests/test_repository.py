@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from db.repository import (
     MAX_PAGE_SIZE,
     Grant,
+    GrantFacets,
     GrantPage,
     GrantRepository,
 )
@@ -99,6 +100,14 @@ class _StubRepository:
 
     def get_by_source(self, source: str, source_id: str) -> Grant | None:
         return None
+
+    def get_facets(
+        self,
+        query: str,
+        *,
+        source: str | None = None,
+    ) -> GrantFacets:
+        return GrantFacets(sources=[], programmes=[], countries=[])
 
 
 # ---------------------------------------------------------------------------

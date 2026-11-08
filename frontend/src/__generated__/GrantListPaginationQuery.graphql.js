@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<d08f833b53ad1f1027746e4b55847210>>
+ * @generated SignedSource<<cad6c5070446bfd4b141eec4255458b3>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -16,9 +16,29 @@ var v0 = [
     "name": "after"
   },
   {
+    "defaultValue": null,
+    "kind": "LocalArgument",
+    "name": "country"
+  },
+  {
     "defaultValue": 100,
     "kind": "LocalArgument",
     "name": "first"
+  },
+  {
+    "defaultValue": null,
+    "kind": "LocalArgument",
+    "name": "fundingMax"
+  },
+  {
+    "defaultValue": null,
+    "kind": "LocalArgument",
+    "name": "fundingMin"
+  },
+  {
+    "defaultValue": null,
+    "kind": "LocalArgument",
+    "name": "programmes"
   },
   {
     "defaultValue": null,
@@ -29,6 +49,16 @@ var v0 = [
     "defaultValue": null,
     "kind": "LocalArgument",
     "name": "source"
+  },
+  {
+    "defaultValue": null,
+    "kind": "LocalArgument",
+    "name": "yearMax"
+  },
+  {
+    "defaultValue": null,
+    "kind": "LocalArgument",
+    "name": "yearMin"
   }
 ],
 v1 = [
@@ -39,8 +69,28 @@ v1 = [
   },
   {
     "kind": "Variable",
+    "name": "country",
+    "variableName": "country"
+  },
+  {
+    "kind": "Variable",
     "name": "first",
     "variableName": "first"
+  },
+  {
+    "kind": "Variable",
+    "name": "fundingMax",
+    "variableName": "fundingMax"
+  },
+  {
+    "kind": "Variable",
+    "name": "fundingMin",
+    "variableName": "fundingMin"
+  },
+  {
+    "kind": "Variable",
+    "name": "programmes",
+    "variableName": "programmes"
   },
   {
     "kind": "Variable",
@@ -51,6 +101,16 @@ v1 = [
     "kind": "Variable",
     "name": "source",
     "variableName": "source"
+  },
+  {
+    "kind": "Variable",
+    "name": "yearMax",
+    "variableName": "yearMax"
+  },
+  {
+    "kind": "Variable",
+    "name": "yearMin",
+    "variableName": "yearMin"
   }
 ];
 return {
@@ -117,41 +177,6 @@ return {
                     "alias": null,
                     "args": null,
                     "kind": "ScalarField",
-                    "name": "startDate",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
-                    "name": "country",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
-                    "name": "sourceProgramme",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
-                    "name": "fundingAmount",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
-                    "name": "fundingCurrency",
-                    "storageKey": null
-                  },
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
                     "name": "title",
                     "storageKey": null
                   },
@@ -160,6 +185,13 @@ return {
                     "args": null,
                     "kind": "ScalarField",
                     "name": "organization",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "country",
                     "storageKey": null
                   },
                   {
@@ -180,6 +212,13 @@ return {
                     "alias": null,
                     "args": null,
                     "kind": "ScalarField",
+                    "name": "sourceProgramme",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
                     "name": "sourceUrl",
                     "storageKey": null
                   },
@@ -187,7 +226,28 @@ return {
                     "alias": null,
                     "args": null,
                     "kind": "ScalarField",
+                    "name": "startDate",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
                     "name": "endDate",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "fundingAmount",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "fundingCurrency",
                     "storageKey": null
                   },
                   {
@@ -243,7 +303,13 @@ return {
         "args": (v1/*: any*/),
         "filters": [
           "query",
-          "source"
+          "source",
+          "yearMin",
+          "yearMax",
+          "country",
+          "programmes",
+          "fundingMin",
+          "fundingMax"
         ],
         "handle": "connection",
         "key": "GrantList_search",
@@ -253,16 +319,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "5e281904300dc1c86e8b7db83031c8bc",
+    "cacheID": "70dcaac4216645fe73d243a31772a9b7",
     "id": null,
     "metadata": {},
     "name": "GrantListPaginationQuery",
     "operationKind": "query",
-    "text": "query GrantListPaginationQuery(\n  $after: String\n  $first: Int = 100\n  $query: String!\n  $source: Source\n) {\n  ...GrantList_query_20xrvv\n}\n\nfragment GrantCard_grant on GrantNode {\n  id\n  title\n  organization\n  country\n  source\n  sourceId\n  sourceProgramme\n  sourceUrl\n  startDate\n  endDate\n  fundingAmount\n  fundingCurrency\n}\n\nfragment GrantList_query_20xrvv on Query {\n  search(query: $query, source: $source, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        startDate\n        country\n        sourceProgramme\n        fundingAmount\n        fundingCurrency\n        ...GrantCard_grant\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
+    "text": "query GrantListPaginationQuery(\n  $after: String\n  $country: String\n  $first: Int = 100\n  $fundingMax: Float\n  $fundingMin: Float\n  $programmes: [String!]\n  $query: String!\n  $source: Source\n  $yearMax: Int\n  $yearMin: Int\n) {\n  ...GrantList_query_VqWS4\n}\n\nfragment GrantCard_grant on GrantNode {\n  id\n  title\n  organization\n  country\n  source\n  sourceId\n  sourceProgramme\n  sourceUrl\n  startDate\n  endDate\n  fundingAmount\n  fundingCurrency\n}\n\nfragment GrantList_query_VqWS4 on Query {\n  search(query: $query, source: $source, yearMin: $yearMin, yearMax: $yearMax, country: $country, programmes: $programmes, fundingMin: $fundingMin, fundingMax: $fundingMax, first: $first, after: $after) {\n    totalCount\n    edges {\n      node {\n        id\n        ...GrantCard_grant\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
   }
 };
 })();
 
-node.hash = "50691af79f86fef4fc8825c255c1ff8d";
+node.hash = "d13615790da400885b5f25dc56fea1c8";
 
 export default node;

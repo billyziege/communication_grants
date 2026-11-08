@@ -1,28 +1,38 @@
 import React from 'react';
 import { usePaginationFragment, graphql } from 'react-relay';
 import GrantCard from './GrantCard.jsx';
-import { applyFacets } from '../lib/facets.js';
 
 export const GrantList_query = graphql`
   fragment GrantList_query on Query
   @argumentDefinitions(
     query: { type: "String!" }
     source: { type: "Source" }
+    yearMin: { type: "Int" }
+    yearMax: { type: "Int" }
+    country: { type: "String" }
+    programmes: { type: "[String!]" }
+    fundingMin: { type: "Float" }
+    fundingMax: { type: "Float" }
     first: { type: "Int", defaultValue: 100 }
     after: { type: "String" }
   )
   @refetchable(queryName: "GrantListPaginationQuery") {
-    search(query: $query, source: $source, first: $first, after: $after)
-      @connection(key: "GrantList_search") {
+    search(
+      query: $query
+      source: $source
+      yearMin: $yearMin
+      yearMax: $yearMax
+      country: $country
+      programmes: $programmes
+      fundingMin: $fundingMin
+      fundingMax: $fundingMax
+      first: $first
+      after: $after
+    ) @connection(key: "GrantList_search") {
       totalCount
       edges {
         node {
           id
-          startDate
-          country
-          sourceProgramme
-          fundingAmount
-          fundingCurrency
           ...GrantCard_grant
         }
       }
@@ -32,11 +42,10 @@ export const GrantList_query = graphql`
 
 export default function GrantList({
   query: queryRef,
-  facets,
   onSelectGrant,
   onSave,
   savedIds,
-  activeTab,
+  saveDisabled,
 }) {
   const { data, loadNext, isLoadingNext, hasNext } = usePaginationFragment(
     GrantList_query,
@@ -45,18 +54,6 @@ export default function GrantList({
 
   const totalCount = data.search?.totalCount ?? 0;
   const edges = data.search?.edges ?? [];
-
-  // Apply client-side facets if any are active
-  const displayedEdges = facets != null
-    ? edges.filter(e => {
-        const { startDate, country, sourceProgramme, fundingAmount, fundingCurrency } = e.node;
-        const snapshot = { startDate, country, sourceProgramme, fundingAmount, fundingCurrency };
-        return applyFacets([snapshot], facets).length > 0;
-      })
-    : edges;
-
-  const displayedCount = displayedEdges.length;
-  const isFiltered = facets != null && displayedCount !== edges.length;
 
   if (edges.length === 0) {
     return (
@@ -71,26 +68,23 @@ export default function GrantList({
       {/* Count summary */}
       <p className="text-xs text-gray-500 mb-3">
         Showing{' '}
-        <span className="font-medium text-gray-700">{displayedCount}</span>
-        {isFiltered && (
-          <span> (filtered from {edges.length})</span>
-        )}{' '}
-        of{' '}
+        <span className="font-medium text-gray-700">{edges.length}</span>
+        {' '}of{' '}
         <span className="font-medium text-gray-700">{totalCount}</span>{' '}
-        database match{totalCount !== 1 ? 'es' : ''}
+        match{totalCount !== 1 ? 'es' : ''}
       </p>
 
       {/* Grant cards */}
       <div className="space-y-3">
-        {displayedEdges.map(edge => (
+        {edges.map(edge => (
           <GrantCard
             key={edge.node.id}
             grant={edge.node}
             onSelect={onSelectGrant}
             onSave={onSave}
             isSaved={savedIds?.has(edge.node.id) ?? false}
-            saveDisabled={activeTab === 'search'}
-            saveTooltip="Create a collection tab first"
+            saveDisabled={saveDisabled}
+            saveTooltip={saveDisabled ? 'Make a collection active first' : undefined}
           />
         ))}
       </div>

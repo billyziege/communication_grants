@@ -5,7 +5,7 @@ export default function SearchBar({ value, onChange, onSearch }) {
     <div className="flex flex-1 gap-2 max-w-2xl">
       <input
         type="search"
-        placeholder="Search grants by keyword…"
+        placeholder="Search grant abstracts by keyword…"
         className="flex-1 text-sm border border-gray-200 rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400"
         value={value}
         onChange={e => onChange(e.target.value)}

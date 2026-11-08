@@ -338,6 +338,7 @@ def run(start_year: int, data_dir: Path, force: bool) -> int:
     anchor = get_anchor_date(rate_limiter)
     print(f"CORDIS temporal anchor: {anchor}")
     print(f"Both sources will cover {start_year} through {anchor}.")
+    print("This process may take up to an hour to retrieve all data...")
 
     # --- CORDIS downloads ---
     cordis_programmes: list[dict] = []

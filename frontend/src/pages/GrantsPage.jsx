@@ -5,7 +5,7 @@ import GrantList, { GrantList_query } from '../components/GrantList.jsx';
 import GrantDetailPanel, { GrantDetailPanelQuery } from '../components/GrantDetailPanel.jsx';
 import CollectionsPanel from '../components/CollectionsPanel.jsx';
 import { GrantCardContent } from '../components/GrantCard.jsx';
-import { applyFacets, emptyFacets } from '../lib/facets.js';
+import { emptyFilters } from '../lib/facets.js';
 import {
   loadCollections,
   saveCollections,
@@ -22,10 +22,16 @@ export const GrantsPageSearchQuery = graphql`
   query GrantsPageSearchQuery(
     $query: String!
     $source: Source
+    $yearMin: Int
+    $yearMax: Int
+    $country: String
+    $programmes: [String!]
+    $fundingMin: Float
+    $fundingMax: Float
     $first: Int
     $after: String
   ) {
-    searchFacets(query: $query, source: $source) {
+    searchFacets(query: $query) {
       sources
       programmes
       countries
@@ -33,6 +39,12 @@ export const GrantsPageSearchQuery = graphql`
     ...GrantList_query @arguments(
       query: $query
       source: $source
+      yearMin: $yearMin
+      yearMax: $yearMax
+      country: $country
+      programmes: $programmes
+      fundingMin: $fundingMin
+      fundingMax: $fundingMax
       first: $first
       after: $after
     )
@@ -86,15 +98,30 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// ── Filter toggle button ───────────────────────────────────────────────────────
+
+function FunnelIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M1 2h12l-4.5 5.5V12L5.5 10.5V7.5L1 2z" fillRule="evenodd" />
+    </svg>
+  );
+}
+
 // ── Search results container ───────────────────────────────────────────────────
 
 function SearchResultsContainer({
   queryRef,
-  facets,
   onSelectGrant,
   onSave,
   savedIds,
-  activeTab,
+  saveDisabled,
   onFacetsLoaded,
 }) {
   const data = usePreloadedQuery(GrantsPageSearchQuery, queryRef);
@@ -103,42 +130,26 @@ function SearchResultsContainer({
     if (data.searchFacets) onFacetsLoaded?.(data.searchFacets);
   }, [data.searchFacets, onFacetsLoaded]);
 
-  // Build a Set of IDs that pass client-side facets, if any are active
-  const hasActiveFacets =
-    facets.startYearMin != null ||
-    facets.startYearMax != null ||
-    (facets.country && facets.country.trim() !== '') ||
-    facets.programmes.size > 0 ||
-    facets.fundingMin != null ||
-    facets.fundingMax != null;
-
-  // We need snapshot data for facet filtering; extract from search edges
-  // The GrantList component reads through the fragment so we pass the query root
-  // and let GrantList do the pagination. For facet filtering we pass filteredIds.
-  // We get edges via the fragment data inside GrantList — but here we need a snapshot.
-  // For simplicity, we pass facets to GrantList and it computes the filtered IDs.
-
   return (
     <GrantList
       query={data}
-      facets={hasActiveFacets ? facets : null}
       onSelectGrant={onSelectGrant}
       onSave={onSave}
       savedIds={savedIds}
-      activeTab={activeTab}
+      saveDisabled={saveDisabled}
     />
   );
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-export default function GrantsPage({ pendingSearch, searchValue: externalSearchValue }) {
+export default function GrantsPage({ pendingSearch }) {
   const [queryRef, loadQuery] = useQueryLoader(GrantsPageSearchQuery);
   const [detailQueryRef, loadDetailQuery, disposeDetailQuery] = useQueryLoader(GrantDetailPanelQuery);
 
-  const [source, setSource] = useState(null);
-  const [facets, setFacets] = useState(emptyFacets());
-  const [internalSearchValue, setInternalSearchValue] = useState('');
+  const [filters, setFilters] = useState(emptyFilters);
+  const [lastQuery, setLastQuery] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('search');
   const [activeCollectionName, setActiveCollectionName] = useState(null);
   const [availableFacets, setAvailableFacets] = useState({ sources: [], programmes: [], countries: [] });
@@ -147,10 +158,19 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
   const [collections, setCollections] = useState(() => loadCollections());
   const [importError, setImportError] = useState('');
 
+  // Count how many filter dimensions are active
+  const activeFilterCount = [
+    filters.source != null,
+    filters.yearMin != null || filters.yearMax != null,
+    filters.country !== '',
+    filters.programmes.size > 0,
+    filters.fundingMin != null || filters.fundingMax != null,
+  ].filter(Boolean).length;
+
   // When App fires a search from the header, respond to it
   useEffect(() => {
     if (pendingSearch != null) {
-      runSearch(pendingSearch.query);
+      runSearch(pendingSearch.query, emptyFilters());
     }
   }, [pendingSearch]);
 
@@ -159,17 +179,44 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
     saveCollections(cols);
   }
 
-  function runSearch(query) {
+  function filtersToQueryVars(f) {
+    return {
+      source: f.source || undefined,
+      yearMin: f.yearMin ?? undefined,
+      yearMax: f.yearMax ?? undefined,
+      country: f.country || undefined,
+      programmes: f.programmes.size > 0 ? [...f.programmes] : undefined,
+      fundingMin: f.fundingMin ?? undefined,
+      fundingMax: f.fundingMax ?? undefined,
+    };
+  }
+
+  function runSearch(query, currentFilters) {
+    const f = currentFilters ?? filters;
+    setLastQuery(query);
     setAvailableFacets({ sources: [], programmes: [], countries: [] });
     loadQuery(
-      { query: query || ' ', source: source || undefined, first: 100 },
+      { query: query || ' ', ...filtersToQueryVars(f), first: 100 },
       { fetchPolicy: 'network-only' }
     );
     setActiveTab('search');
   }
 
-  function handleSearch(query) {
-    runSearch(query);
+  function handleApplyFilters(newFilters) {
+    setFilters(newFilters);
+    setSidebarOpen(false);
+    if (lastQuery !== null) {
+      runSearch(lastQuery, newFilters);
+    }
+  }
+
+  function handleResetFilters() {
+    const empty = emptyFilters();
+    setFilters(empty);
+    setSidebarOpen(false);
+    if (lastQuery !== null) {
+      runSearch(lastQuery, empty);
+    }
   }
 
   function handleSelectGrant(id) {
@@ -237,7 +284,6 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
       return;
     }
 
-    // Re-fetch grants via grantsBySource (outside component render cycle)
     let result;
     try {
       result = await fetchQuery(RelayEnvironment, GrantsPageReloadCollectionQuery, {
@@ -288,21 +334,22 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
 
   return (
     <div className="flex h-full">
-      {/* Filter sidebar */}
-      <div className="flex-shrink-0 w-[280px] border-r border-gray-200 bg-white overflow-y-auto">
-        <FilterPanel
-          source={source}
-          onSourceChange={setSource}
-          onFacetsChange={setFacets}
-          onSearch={() => handleSearch(externalSearchValue ?? internalSearchValue)}
-          availableSources={availableFacets.sources}
-          availableProgrammes={availableFacets.programmes}
-          availableCountries={availableFacets.countries}
-        />
-      </div>
+      {/* Collapsible filter sidebar — only shown after a search */}
+      {sidebarOpen && queryRef !== null && (
+        <div className="flex-shrink-0 w-[280px] border-r border-gray-200 bg-white flex flex-col">
+          <FilterPanel
+            filters={filters}
+            availableSources={availableFacets.sources}
+            availableProgrammes={availableFacets.programmes}
+            availableCountries={availableFacets.countries}
+            onApply={handleApplyFilters}
+            onReset={handleResetFilters}
+          />
+        </div>
+      )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Tab bar + collections panel */}
         <CollectionsPanel
           collections={collections}
@@ -315,6 +362,30 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
           importError={importError}
         />
 
+        {/* Filter toggle bar — only visible after first search */}
+        {queryRef !== null && activeTab === 'search' && (
+          <div className="flex-shrink-0 border-b border-gray-100 px-4 py-2 flex items-center gap-2 bg-white">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(o => !o)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-sm rounded-md border transition-colors ${
+                sidebarOpen || activeFilterCount > 0
+                  ? 'border-blue-400 text-blue-700 bg-blue-50 hover:bg-blue-100'
+                  : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'
+              }`}
+              aria-label="Toggle filters"
+            >
+              <FunnelIcon />
+              <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 text-xs font-semibold bg-blue-600 text-white rounded-full leading-none">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
         {/* Content area */}
         <div className="flex-1 overflow-y-auto p-6">
 
@@ -323,7 +394,7 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
             queryRef == null ? (
               <div className="flex items-center justify-center h-full min-h-48">
                 <p className="text-gray-400 italic text-sm" data-testid="empty-search-state">
-                  Enter keywords in the search bar and click Search abstracts to find grants.
+                  Enter keywords in the search bar and click Search to find grants.
                 </p>
               </div>
             ) : (
@@ -340,11 +411,10 @@ export default function GrantsPage({ pendingSearch, searchValue: externalSearchV
                 >
                   <SearchResultsContainer
                     queryRef={queryRef}
-                    facets={facets}
                     onSelectGrant={handleSelectGrant}
                     onSave={handleSave}
                     savedIds={new Set()}
-                    activeTab={activeTab}
+                    saveDisabled={activeCollectionName === null}
                     onFacetsLoaded={handleFacetsLoaded}
                   />
                 </Suspense>

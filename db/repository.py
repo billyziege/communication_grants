@@ -93,16 +93,27 @@ class GrantRepository(Protocol):
         query: str,
         *,
         source: str | None = None,
+        year_min: int | None = None,
+        year_max: int | None = None,
+        country: str | None = None,
+        programmes: list[str] | None = None,
+        funding_min: float | None = None,
+        funding_max: float | None = None,
         limit: int = 20,
         offset: int = 0,
     ) -> GrantPage:
         """Full-text search over title and abstract.
 
-        query    — FTS5 MATCH expression (the caller supplies the search terms;
-                   the implementation wraps it in a MATCH query)
-        source   — 'nih', 'cordis', or None (all sources)
-        limit    — max rows to return; capped at MAX_PAGE_SIZE by the implementation
-        offset   — zero-based row offset for pagination
+        query       — FTS5 MATCH expression
+        source      — 'nih', 'cordis', or None (all sources)
+        year_min    — inclusive lower bound on start_date year
+        year_max    — inclusive upper bound on start_date year
+        country     — exact ISO alpha-2 country code
+        programmes  — list of source_programme slugs (OR logic within list)
+        funding_min — inclusive lower bound on funding_amount
+        funding_max — inclusive upper bound on funding_amount
+        limit       — max rows; capped at MAX_PAGE_SIZE
+        offset      — zero-based row offset for pagination
         """
         ...
 

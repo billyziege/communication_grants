@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<8e0713a3367ec91de5d702ede9ac2937>>
+ * @generated SignedSource<<5649dec39aebff53d25eea7e45b09851>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -22,9 +22,29 @@ return {
       "name": "after"
     },
     {
+      "defaultValue": null,
+      "kind": "LocalArgument",
+      "name": "country"
+    },
+    {
       "defaultValue": 100,
       "kind": "LocalArgument",
       "name": "first"
+    },
+    {
+      "defaultValue": null,
+      "kind": "LocalArgument",
+      "name": "fundingMax"
+    },
+    {
+      "defaultValue": null,
+      "kind": "LocalArgument",
+      "name": "fundingMin"
+    },
+    {
+      "defaultValue": null,
+      "kind": "LocalArgument",
+      "name": "programmes"
     },
     {
       "defaultValue": null,
@@ -35,6 +55,16 @@ return {
       "defaultValue": null,
       "kind": "LocalArgument",
       "name": "source"
+    },
+    {
+      "defaultValue": null,
+      "kind": "LocalArgument",
+      "name": "yearMax"
+    },
+    {
+      "defaultValue": null,
+      "kind": "LocalArgument",
+      "name": "yearMin"
     }
   ],
   "kind": "Fragment",
@@ -67,6 +97,26 @@ return {
       "args": [
         {
           "kind": "Variable",
+          "name": "country",
+          "variableName": "country"
+        },
+        {
+          "kind": "Variable",
+          "name": "fundingMax",
+          "variableName": "fundingMax"
+        },
+        {
+          "kind": "Variable",
+          "name": "fundingMin",
+          "variableName": "fundingMin"
+        },
+        {
+          "kind": "Variable",
+          "name": "programmes",
+          "variableName": "programmes"
+        },
+        {
+          "kind": "Variable",
           "name": "query",
           "variableName": "query"
         },
@@ -74,6 +124,16 @@ return {
           "kind": "Variable",
           "name": "source",
           "variableName": "source"
+        },
+        {
+          "kind": "Variable",
+          "name": "yearMax",
+          "variableName": "yearMax"
+        },
+        {
+          "kind": "Variable",
+          "name": "yearMin",
+          "variableName": "yearMin"
         }
       ],
       "concreteType": "SearchGrantConnection",
@@ -109,41 +169,6 @@ return {
                   "args": null,
                   "kind": "ScalarField",
                   "name": "id",
-                  "storageKey": null
-                },
-                {
-                  "alias": null,
-                  "args": null,
-                  "kind": "ScalarField",
-                  "name": "startDate",
-                  "storageKey": null
-                },
-                {
-                  "alias": null,
-                  "args": null,
-                  "kind": "ScalarField",
-                  "name": "country",
-                  "storageKey": null
-                },
-                {
-                  "alias": null,
-                  "args": null,
-                  "kind": "ScalarField",
-                  "name": "sourceProgramme",
-                  "storageKey": null
-                },
-                {
-                  "alias": null,
-                  "args": null,
-                  "kind": "ScalarField",
-                  "name": "fundingAmount",
-                  "storageKey": null
-                },
-                {
-                  "alias": null,
-                  "args": null,
-                  "kind": "ScalarField",
-                  "name": "fundingCurrency",
                   "storageKey": null
                 },
                 {
@@ -205,6 +230,6 @@ return {
 };
 })();
 
-node.hash = "50691af79f86fef4fc8825c255c1ff8d";
+node.hash = "d13615790da400885b5f25dc56fea1c8";
 
 export default node;
