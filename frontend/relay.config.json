@@ -1,0 +1,8 @@
+{
+  "src": "./src",
+  "schema": "./schema.graphql",
+  "language": "javascript",
+  "artifactDirectory": "./src/__generated__",
+  "eagerEsModules": true,
+  "exclude": ["**/__generated__/**", "**/__tests__/**"]
+}

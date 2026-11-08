@@ -1,0 +1,120 @@
+type GrantConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [GrantNodeEdge!]!
+  totalCount: Int!
+}
+
+input GrantLookupInput {
+  source: Source!
+  sourceId: String!
+}
+
+type GrantNode implements Node {
+  """The Globally Unique ID of this object"""
+  id: ID!
+  title: String!
+  abstract: String
+  startDate: String
+  endDate: String
+  fundingAmount: Float
+  fundingCurrency: String
+  organization: String
+  country: String
+  source: Source!
+  sourceId: String!
+  sourceProgramme: String
+  sourceUrl: String!
+  metadata: JSON!
+}
+
+"""An edge in a connection."""
+type GrantNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: GrantNode!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
+
+"""An object with a Globally Unique ID"""
+interface Node {
+  """The Globally Unique ID of this object"""
+  id: ID!
+}
+
+"""Information to aid in pagination."""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+type Query {
+  node(
+    """The ID of the object."""
+    id: ID!
+  ): Node!
+  grants(
+    source: Source = null
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): GrantConnection!
+  search(
+    query: String!
+    source: Source = null
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): SearchGrantConnection!
+  grantBySource(source: Source!, sourceId: String!): GrantNode
+  grantsBySource(items: [GrantLookupInput!]!): [GrantNode]!
+}
+
+type SearchGrantConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [GrantNodeEdge!]!
+  totalCount: Int!
+}
+
+enum Source {
+  NIH
+  CORDIS
+}

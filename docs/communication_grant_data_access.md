@@ -28,6 +28,7 @@ The immediate goal is to support a research paper analyzing funding patterns rel
 - **File sizes:** Annual project files ~40–68MB (CSV, recent years); abstract files comparable. Total for 2007–2025 estimated at ~1–2GB CSV, producing a SQLite DB of ~1–3GB with FTS5 indexes
 - **Download constraints:** No published rate limit for static file downloads (the 1 req/sec and off-hours guidance applies to the RePORTER API, not ExPORTER). Polite practice for `build_db.py`: set an identifying `User-Agent` header and a 2-second delay between file fetches. For a ~20-file build this adds negligible time.
 - **Reproducibility:** The build script accepts `--start-year` / `--end-year` arguments. The date window used for any published analysis is noted in the paper; since the script is public, the dataset is fully reproducible.
+- **Streaming ZIP format:** NIH ExPORTER project ZIPs (confirmed for FY2025) use ZIP general-purpose bit flag `0x0008` (data descriptor), where compressed and uncompressed sizes are stored in a trailing record rather than the local file header. Python's `zipfile.ZipFile` raises `BadZipFile` on these files. The DB build pipeline reads them via raw deflate streaming (`zlib.decompressobj(-15)`). Abstract ZIPs use the standard format and open normally.
 - **Gap fill:** ExPORTER releases annually and lags the fiscal year end by an unknown interval. The effective NIH end date is set by the CORDIS bulk download's last updated date (see §2.2), ensuring both sources are temporally aligned. If the CORDIS end date is more recent than the last ExPORTER file, `build_db.py` fills the gap using the live RePORTER API (v2, `fiscal_years` filter). See §3.3 for gap-fill behavior and rate-limit surfacing.
 
 ### 2.2 EU CORDIS
@@ -104,6 +105,14 @@ All field mapping and normalization from source schemas (NIH ExPORTER CSV column
 **Why not true GraphQL federation?**  
 Overkill at this scale. Both backends are resolved through a single Strawberry schema — this is standard multi-source resolution, not a federated gateway architecture.
 
+**Overwrite protection and backup in `build_db.py`:**  
+When `build_db.py` detects an existing non-empty database, it pauses before writing. The prompt differs based on whether `--backup-db` was passed:
+
+- **With `--backup-db [PATH]`:** `"grants.db already exists with N grants. Will back up to {path} before writing.\nPress Enter to continue or Ctrl+C to abort."` — backup (`shutil.copy2`) runs after the user confirms, before any writes.
+- **Without `--backup-db`:** `"grants.db already exists with N grants. You can abort and rerun with --backup-db to preserve current state.\nPress Enter to continue or Ctrl+C to abort."`
+
+If no path is given with `--backup-db`, the backup is auto-named `{db_path}.{YYYYMMDDHHMMSS}.bak`. This protects manual corrections or annotations made directly to the database between runs.
+
 **Why Docker Compose?**  
 Deployment simplicity for sharing with colleagues. The SQLite file lives on a named volume to survive image rebuilds.
 
@@ -130,7 +139,7 @@ Each contract topic is discussed, researched, and written before the correspondi
 |---|---|---|
 | 1 | Common data model | Unified `Grant` schema — shared fields, explicit provenance fields (`source`, `source_id`, `source_programme`, `source_url`); field mapping from NIH ExPORTER and CORDIS to shared schema; provenance is first-class, not an afterthought |
 | 2 | Repository interface | `GrantRepository` interface; query method signatures; `source` filter; result pagination shape |
-| 3 | DB build pipeline | `build_db.py`; `--start-year` / `--end-year` CLI args; NIH ExPORTER download + parse + normalize; ExPORTER gap detection; live RePORTER API gap fill (preflight estimate, warn-and-proceed, 1 req/sec); CORDIS bulk download + parse + normalize; full normalization to unified `Grant` schema with explicit provenance fields; SQLite schema + FTS5 setup; idempotent load; polite download behavior (User-Agent, 2s delay) |
+| 3 | DB build pipeline | `build_db.py`; `--start-year` / `--end-year` CLI args; NIH ExPORTER download + parse + normalize (streaming ZIP for project files); NIH country name → ISO alpha-2 lookup; ExPORTER gap detection; live RePORTER API gap fill (preflight estimate, warn-and-proceed, 1 req/sec); CORDIS bulk download + parse + normalize; full normalization to unified `Grant` schema with explicit provenance fields; SQLite schema + FTS5 setup; idempotent load; polite download behavior (User-Agent, 2s delay); overwrite detection + confirmation prompt; `--backup-db [PATH]` to copy existing DB before overwriting |
 | 4 | SQLite query layer | Single `GrantRepository` implementation over unified SQLite schema; FTS5 `MATCH` queries written as raw SQL (not ORM); `source` column filter for per-source queries; provenance fields exposed; result pagination |
 | 5 | GraphQL schema | Strawberry types; Relay connections and pagination; resolver wiring to repository; provenance fields in `Grant` type |
 | 6 | Frontend | Relay queries; component contracts; search input and results display |

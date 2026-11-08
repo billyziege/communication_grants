@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "communication-grants"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "strawberry-graphql[fastapi]>=0.341",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
