@@ -15,8 +15,8 @@ export default function App() {
   return (
     <RelayEnvironmentProvider environment={RelayEnvironment}>
       <div className="h-screen flex flex-col bg-gray-50">
-        <header className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4">
-          <h1 className="text-xl font-semibold text-gray-900 flex-shrink-0">
+        <header className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3 flex items-start gap-4">
+          <h1 className="text-xl font-semibold text-gray-900 flex-shrink-0 mt-1">
             Communication Grants
           </h1>
           <SearchBar
