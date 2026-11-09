@@ -15,6 +15,11 @@ import sqlite3
 
 from db.repository import Grant, GrantFacets, GrantPage, GrantRepository, MAX_PAGE_SIZE
 
+# FTS5 is told to rank at most this many results before the caller filters them.
+# This avoids computing BM25 across the full corpus for common grant words.
+# 2 000 is well above any realistic browsing need while keeping queries <300 ms.
+FTS_MAX_RESULTS = 2000
+
 
 class SQLiteGrantRepository:
     """Read-only SQLite implementation of the GrantRepository Protocol.
@@ -108,59 +113,74 @@ class SQLiteGrantRepository:
         """
         clamped_limit = self._validate(source, limit, offset)
 
-        clauses: list[str] = []
-        extra: list = []
+        # Build WHERE clause for the outer (post-FTS5) query.
+        # Conditions reference the joined `grants` alias g; no leading "AND".
+        where_parts: list[str] = []
+        filter_params: list = []
 
         if source is not None:
-            clauses.append("AND g.source = ?")
-            extra.append(source)
+            where_parts.append("g.source = ?")
+            filter_params.append(source)
         if year_min is not None:
-            clauses.append("AND CAST(substr(g.start_date, 1, 4) AS INT) >= ?")
-            extra.append(year_min)
+            where_parts.append("CAST(substr(g.start_date, 1, 4) AS INT) >= ?")
+            filter_params.append(year_min)
         if year_max is not None:
-            clauses.append("AND CAST(substr(g.start_date, 1, 4) AS INT) <= ?")
-            extra.append(year_max)
+            where_parts.append("CAST(substr(g.start_date, 1, 4) AS INT) <= ?")
+            filter_params.append(year_max)
         if country:
-            clauses.append("AND g.country = ?")
-            extra.append(country)
+            where_parts.append("g.country = ?")
+            filter_params.append(country)
         if programmes:
             placeholders = ",".join(["?"] * len(programmes))
-            clauses.append(f"AND g.source_programme IN ({placeholders})")
-            extra.extend(programmes)
+            where_parts.append(f"g.source_programme IN ({placeholders})")
+            filter_params.extend(programmes)
         if funding_min is not None:
-            clauses.append("AND g.funding_amount >= ?")
-            extra.append(funding_min)
+            where_parts.append("g.funding_amount >= ?")
+            filter_params.append(funding_min)
         if funding_max is not None:
-            clauses.append("AND g.funding_amount <= ?")
-            extra.append(funding_max)
+            where_parts.append("g.funding_amount <= ?")
+            filter_params.append(funding_max)
 
-        filter_sql = " ".join(clauses)
+        where_clause = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
 
+        # Using FTS5's native `rank` column in the CTE lets the engine return
+        # results in BM25 order using its internal heap-sort, stopping at
+        # FTS_MAX_RESULTS without scoring the full corpus.  The outer query
+        # then filters and paginates the already-ranked set.
         results_sql = f"""
-            SELECT g.*,
-                   bm25(grants_fts) AS rank
-            FROM   grants_fts
-            JOIN   grants g ON grants_fts.rowid = g.id
-            WHERE  grants_fts MATCH ?
-                   {filter_sql}
-            ORDER  BY bm25(grants_fts)
+            WITH fts AS (
+                SELECT rowid, rank
+                FROM   grants_fts
+                WHERE  grants_fts MATCH ?
+                ORDER  BY rank LIMIT {FTS_MAX_RESULTS}
+            )
+            SELECT g.*, fts.rank
+            FROM   fts
+            JOIN   grants g ON fts.rowid = g.id
+            {where_clause}
+            ORDER  BY fts.rank
             LIMIT  ? OFFSET ?
         """
         rows = self._conn.execute(
             results_sql,
-            [query] + extra + [clamped_limit, offset],
+            [query] + filter_params + [clamped_limit, offset],
         ).fetchall()
 
         count_sql = f"""
+            WITH fts AS (
+                SELECT rowid
+                FROM   grants_fts
+                WHERE  grants_fts MATCH ?
+                ORDER  BY rank LIMIT {FTS_MAX_RESULTS}
+            )
             SELECT COUNT(*)
-            FROM   grants_fts
-            JOIN   grants g ON grants_fts.rowid = g.id
-            WHERE  grants_fts MATCH ?
-                   {filter_sql}
+            FROM   fts
+            JOIN   grants g ON fts.rowid = g.id
+            {where_clause}
         """
         total: int = self._conn.execute(
             count_sql,
-            [query] + extra,
+            [query] + filter_params,
         ).fetchone()[0]
 
         return GrantPage(
@@ -244,28 +264,29 @@ class SQLiteGrantRepository:
                 f"source must be 'nih', 'cordis', or None; got {source!r}"
             )
 
-        if source is not None:
-            source_clause = "AND g.source = ?"
-            source_params: list = [source]
-        else:
-            source_clause = ""
-            source_params = []
+        source_filter = "AND g.source = ?" if source is not None else ""
+        source_params: list = [source] if source is not None else []
 
-        def _distinct(col: str, extra: str = "") -> list[str]:
+        def _distinct(col: str) -> list[str]:
             sql = f"""
+                WITH fts AS (
+                    SELECT rowid
+                    FROM   grants_fts
+                    WHERE  grants_fts MATCH ?
+                    ORDER  BY rank LIMIT {FTS_MAX_RESULTS}
+                )
                 SELECT DISTINCT g.{col}
-                FROM   grants_fts
-                JOIN   grants g ON grants_fts.rowid = g.id
-                WHERE  grants_fts MATCH ?
-                       {source_clause}
-                       {extra}
+                FROM   fts
+                JOIN   grants g ON fts.rowid = g.id
+                WHERE  g.{col} IS NOT NULL
+                       {source_filter}
                 ORDER  BY g.{col}
             """
             rows = self._conn.execute(sql, [query] + source_params).fetchall()
-            return [r[0] for r in rows if r[0] is not None]
+            return [r[0] for r in rows]
 
         return GrantFacets(
             sources=_distinct("source"),
-            programmes=_distinct("source_programme", "AND g.source_programme IS NOT NULL"),
-            countries=_distinct("country", "AND g.country IS NOT NULL"),
+            programmes=_distinct("source_programme"),
+            countries=_distinct("country"),
         )
