@@ -13,38 +13,29 @@ for sharing with collaborators.
 ## Prerequisites
 
 - Docker and Docker Compose (v2)
-- Python 3.11+ with [uv](https://docs.astral.sh/uv/) (for the database build step, run outside Docker)
-
-Install uv if you don't have it: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- ~25 GB free disk space (source file cache and SQLite database)
 
 ---
 
 ## Quick Start
 
-**Step 1 — Install Python dependencies (for the build pipeline):**
+**Step 1 — Configure:**
 
 ```bash
-uv sync
+cp .env.example .env
 ```
 
-**Step 2 — Build the database:**
+Open `.env` and set `START_YEAR` (default: 2015) if you want a different range. `DATA_DIR` controls where downloaded files and the database are stored (default: `./data`).
+
+**Step 2 — Build the database** (run once; downloads ~700 MB, takes 10–30 min):
 
 ```bash
-mkdir -p data
-uv run python3 -m db.build_db \
-    --start-year 2015 \
-    --data-dir ./data \
-    --db-path ./data/grants.db
+docker compose --profile build run --rm build-db
 ```
-
-Note: This step downloads several hundred MB of data from NIH and CORDIS. It takes 10–30 minutes depending on network speed. The `--start-year` flag controls how far back NIH data goes (CORDIS data is always all three programmes).
 
 **Step 3 — Start the app:**
 
 ```bash
-# Copy .env.example to .env (defaults are fine for most setups)
-cp .env.example .env
-
 docker compose up --build
 ```
 
@@ -57,11 +48,21 @@ The app is available at **http://localhost:3000**. GraphiQL (the interactive API
 To refresh the data (e.g. after a new CORDIS release):
 
 ```bash
-uv run python3 -m db.build_db --start-year 2015 --data-dir ./data --db-path ./data/grants.db
+docker compose --profile build run --rm build-db
 docker compose restart api
 ```
 
-Use `--force-redownload` to re-download all source files, or `--backup-db` to preserve the previous database before overwriting.
+To force re-download of all source files or back up the previous database before overwriting, pass the extra flags explicitly:
+
+```bash
+docker compose --profile build run --rm build-db \
+    python3 -m db.build_db \
+    --start-year 2015 \
+    --data-dir /data \
+    --db-path /data/grants.db \
+    --force-redownload \
+    --backup-db
+```
 
 ---
 
@@ -73,8 +74,10 @@ The search interface allows saving grants into named collections. Each collectio
 
 ## Development
 
+Requires Python 3.11+ with [uv](https://docs.astral.sh/uv/): `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
 ```bash
-# Install dependencies
+# Install dependencies (including dev extras)
 uv sync
 
 # Run backend tests

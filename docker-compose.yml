@@ -1,5 +1,26 @@
 services:
 
+  # Run once to build/refresh the database: docker compose --profile build run --rm build-db
+  build-db:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command:
+      - python3
+      - -m
+      - db.build_db
+      - --start-year
+      - "${START_YEAR:-2015}"
+      - --data-dir
+      - /data
+      - --db-path
+      - /data/grants.db
+    volumes:
+      - ${DATA_DIR:-./data}:/data   # writable: build-db writes here
+    restart: "no"
+    profiles:
+      - build
+
   api:
     build:
       context: .
